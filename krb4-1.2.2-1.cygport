@@ -1,0 +1,53 @@
+DESCRIPTION="Kerberos 4 runtime"
+HOMEPAGE="http://www.pdc.kth.se/kth-krb/"
+SRC_URI="ftp://ftp.pdc.kth.se/pub/krb/src/${P}.tar.gz"
+PATCH_URI="mirror://portage/app-crypt/kth-krb/files/kth-gentoo.patch
+		   mirror://portage/app-crypt/kth-krb/files/kth-gentoo-ssl.patch
+		   mirror://portage/app-crypt/kth-krb/files/kth-krb-${PV}-berkdb.patch
+		   mirror://portage/app-crypt/kth-krb/files/kth-krb-${PV}-gcc.patch
+		   mirror://portage/app-crypt/kth-krb/files/kth-krb-${PV}-no_libedit.patch
+		   mirror://portage/app-crypt/kth-krb/files/kth-krb-${PV}-revoke.patch
+"
+
+abi=1
+
+PKG_NAMES="${PN} libkrb${abi} libkrb-devel"
+PKG_HINTS="setup devel"
+PKG_CONTENTS[0]="--exclude=man etc/ usr/share/"
+PKG_CONTENTS[1]="usr/bin/cygk*-${abi}.dll"
+PKG_CONTENTS[2]="usr/bin/krb4-config usr/include/ usr/lib/ usr/share/man/"
+
+build_dirs="include lib/roken lib/vers lib/com_err lib/krb lib/kdb lib/kadm tools"
+inst_dirs="include lib/krb lib/kdb lib/kadm tools"
+
+src_compile() {
+	cd ${S}
+	cygautoreconf
+
+	cd ${B}
+	cygconf \
+		--includedir=/usr/include/${PN} \
+		--libdir=/usr/lib/${PN} \
+		--enable-shared \
+		--with-openssl=/usr \
+		--without-ipv6
+
+	for d in ${build_dirs}
+	do
+		cygmake -C ${d}
+	done
+}
+
+src_install() {
+	cd ${B}
+	for d in ${inst_dirs}
+	do
+		cyginstall -C ${d}
+	done
+
+	mv ${D}/usr/lib/bin/*.dll ${D}/usr/bin
+	rmdir ${D}/usr/lib/bin/
+	sed -i -e 's#\.\./bin#../../bin#g' ${D}/usr/lib/${PN}/*.la
+
+	rm -fr ${D}/usr/share/man/cat*
+}
