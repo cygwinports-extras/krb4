@@ -45,9 +45,5 @@ src_install() {
 		cyginstall -C ${d}
 	done
 
-	mv ${D}/usr/lib/bin/*.dll ${D}/usr/bin
-	rmdir ${D}/usr/lib/bin/
-	sed -i -e 's#\.\./bin#../../bin#g' ${D}/usr/lib/${PN}/*.la
-
 	rm -fr ${D}/usr/share/man/cat*
 }
